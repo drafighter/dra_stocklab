@@ -39,6 +39,16 @@ class EBest:
         xa_session_client 는 XASession 객체
         :param mode: 모의서버는 DEMO, 실서버는 PROD 로 구분
         """
+
+        if mode not in ("PROD", "DEMO", "ACE"):
+            raise Exception("Need to run_mode(PROD or DEMO or ACE)")
+
+        run_mode = "EBEST_" + mode
+        config = configparser.ConfigParser()
+        config.read('conf/config.ini')
+        self.user = config[run_mode]['user']
+
+
         
 
 
