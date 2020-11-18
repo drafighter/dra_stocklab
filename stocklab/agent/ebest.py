@@ -78,6 +78,7 @@ class EBest:
     def login(self):
         self.xa_session_clinet.ConnectServer(self.host, self.port)
         self.xa_session_clinet.Login(self.user, self.passwd, self.cert_passwd, 0, 0)
+        print("login")
         while XASession.login_state == 0:
             pythoncom.PumpWaitingMessages()
 
@@ -116,7 +117,10 @@ class EBest:
         # in_block_name 셋팅
         for key, value in set_fields.items():
             xa_query.SetFieldData(in_block_name, key, 0, value)
-        errorCode = xa_query.Request(0)     # TR 요청
+
+        # Long Request(BOOL bNext) - 조회 TR 요청
+        # bNext -> FALSE (0) 면 조회, TRUE (1) 면 다음 조회
+        errorCode = xa_query.Request(0)     # TR 요청 (조회)
 
         # 요청 후 대기
         waiting_cnt = 0
@@ -130,6 +134,15 @@ class EBest:
         result = []
         count = xa_query.GetBlockCount(out_block_name)
 
+        """ 블록의 필드 데이터를 얻어옴
+        GetFieldData(
+                    BSTR szBlockName,   TR의 블록명
+                    BSTR szFieldName,   블록의 필드명
+                    LONG nOccursIndex   블록의 Occurs Index
+        )
+        ex) GetFieldDate("t1101OutBlock", "hname", 0) -> 주식현재가조회에서 종목명 조회
+        """
+
         for i in range(count):
             item = {}
             for field in out_fields:
@@ -141,7 +154,7 @@ class EBest:
         XAQuery.tr_run_state = 0
         self.query_cnt.append(datetime.today())
 
-        # 영문필드를 한글필드명으로 변환
+        # 영문필드를 한글필드명으로 변환 (어렵다.)
         for item in result:
             for field in list(item.keys()):
                 if getattr(Field, res, None):
@@ -151,6 +164,26 @@ class EBest:
                         if field in field_hname:
                             item[field_hname[field]] = item[field]
                             item.pop(field)
+        return result
+
+    def get_code_list(self, market=None):
+        """
+        TR: t8436 코스피, 코스닥의 종목 리스트를 가져온다.
+        :param market: str 전체(0), 코스피(1), 코스닥(2)
+        :return: list 시장 별 종목 리스트
+        """
+        if market not in ["ALL", "KOSPI", "KOSDAQ"]:
+            raise Exception("Need to market param(All, KOSPI, KOSDAQ)")
+
+        market_code = {"ALL": 0, "KOSPI": 1, "KOSDAQ": 2}
+        in_param = {"gubun": market_code[market]}
+        out_param = ['hname', 'shcode', 'expcode', 'etfgubun', 'memedan', 'gubun', 'spac_gubun']
+
+        result = self._execute_query("t8436",
+                                     "t8436InBlock",
+                                     "t8436OutBlock",
+                                     "out_param",
+                                     "in_param")
         return result
 
 
