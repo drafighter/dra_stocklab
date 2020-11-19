@@ -182,8 +182,33 @@ class EBest:
         result = self._execute_query("t8436",
                                      "t8436InBlock",
                                      "t8436OutBlock",
-                                     "out_param",
-                                     "in_param")
+                                     *out_param,
+                                     **in_param)
+        return result
+
+    def get_stock_price_by_code(self, code=None, cnt="1"):
+        """TR: t1305 현재 날짜를 기준으로 cnt 만큼 전일의 데이터를 가져온다
+        :param code:str 종목코드
+        :param cnt:str 데이터 범위
+        :return result:list 종목의 최근 가격 정보
+        """
+        tr_code = "t1305"
+        in_params = {"shcode": code, "dwmcode": "1", "date": "", "idx": "", "cnt": cnt}
+        out_params = ['date', 'open', 'high', 'low', 'close', 'sign',
+                      'change', 'diff', 'volume', 'diff_vol', 'chdegree',
+                      'sojinrate', 'changerate', 'fpvolume', 'covolume',
+                      'value', 'ppvolume', 'o_sign', 'o_change', 'o_diff',
+                      'h_sign', 'h_change', 'h_diff', 'l_sign', 'l_change',
+                      'l_diff', 'marketcap']
+        result = self._execute_query("t1305",
+                                     "t1305InBlock",
+                                     "t1305OutBlock1",
+                                     *out_params,
+                                     **in_params)
+
+        for item in result:
+            item["code"] = code
+
         return result
 
 
