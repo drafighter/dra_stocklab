@@ -20,6 +20,7 @@ class XASession:
         if code == "0000":
             print(code, msg)
             XASession.login_state = 1
+
         else:
             print(code, msg)
 
@@ -109,9 +110,10 @@ class EBest:
             # -> True 를 반환하면 그 요소는 남고, False 를 반환한 요소는 삭제됨
 
             # query_cnt 에 저장된 TR 코드 실행 시간이 600초 지난 것은 저장 TR 리스트에서 삭제하는 로직
-            self.query_cnt = list(filter(lambda x: (datetime.today() - x).total_seconds() < EBest.LIMIT_SECONDS, self.query_cnt)())
+            self.query_cnt = list(filter(lambda x: (datetime.today() - x).total_seconds() < EBest.LIMIT_SECONDS,
+                                         self.query_cnt))
 
-        xa_query = win32com.client.DispatchWithEvents("XA_Session.XAQuery", XAQuery)
+        xa_query = win32com.client.DispatchWithEvents("XA_DataSet.XAQuery", XAQuery)
         xa_query.LoadFromResFile(XAQuery.RES_PATH + res + ".res")
 
         # in_block_name 셋팅
@@ -128,7 +130,7 @@ class EBest:
             waiting_cnt += 1
             if waiting_cnt % 100000 == 0:
                 print("Waiting....", self.xa_session_clinet.GetLastError())
-            pythoncom.PumpWaitingMessage()
+            pythoncom.PumpWaitingMessages()
 
         # 결과블럭
         result = []
